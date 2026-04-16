@@ -1,4 +1,4 @@
-# Dollop
+# Vron
 
 High-performance CLI utility suite for computing, network security, and data integrity. Built with a Rust core and Python interface for maximum execution speed and ease of use.
 
@@ -14,7 +14,7 @@ High-performance CLI utility suite for computing, network security, and data int
 ## Installation
 
 ```bash
-pip install dollop
+pip install vron
 ```
 
 ## Usage
@@ -22,39 +22,39 @@ pip install dollop
 ### Interactive Menu
 Run the utility without arguments to access the interactive menu:
 ```bash
-dollop
+vron
 ```
 
 ### Compute
 Perform parallel statistical analysis or matrix operations:
 ```bash
-dollop compute stats "[10, 20, 30, 40, 50]"
-dollop compute matmul "[[1, 2], [3, 4]]" "[[5, 6], [7, 8]]"
+vron compute stats "[10, 20, 30, 40, 50]"
+vron compute matmul "[[1, 2], [3, 4]]" "[[5, 6], [7, 8]]"
 ```
 
 ### Network Security
 Scan for open ports or retrieve network identity:
 ```bash
-dollop net scan google.com
-dollop net ip
+vron net scan google.com
+vron net ip
 ```
 
 ### Information Assurance
 Verify data integrity or generate secure credentials:
 ```bash
-dollop secure hash "data_to_verify"
-dollop secure pass 32
+vron secure hash "data_to_verify"
+vron secure pass 32
 ```
 
 ### File Tools
 View large files or search for patterns:
 ```bash
-dollop view logs.txt
-dollop find "ERROR" logs.txt
+vron view logs.txt
+vron find "ERROR" logs.txt
 ```
 
 ### Static Web Server
 Serve the current directory over HTTP:
 ```bash
-dollop web 8080 .
+vron web 8080 .
 ```

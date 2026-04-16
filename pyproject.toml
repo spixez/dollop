@@ -3,7 +3,7 @@ requires = ["maturin>=1.13,<2.0"]
 build-backend = "maturin"
 
 [project]
-name = "dollop"
+name = "vron"
 requires-python = ">=3.8"
 dependencies = [
     "questionary>=2.0.0",
@@ -17,13 +17,8 @@ classifiers = [
 dynamic = ["version"]
 
 [project.scripts]
-dollop = "dollop:main"
-
-[project.optional-dependencies]
-tests = [
-    "pytest",
-]
+vron = "vron:main"
 
 [tool.maturin]
 python-source = "python"
-module-name = "dollop._dollop"
+module-name = "vron._vron"

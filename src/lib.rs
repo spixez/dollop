@@ -47,7 +47,7 @@ fn evaluate_math(expression: &str) -> PyResult<f64> {
 fn sys_info() {
     let mut sys = System::new_all();
     sys.refresh_all();
-    println!("{}", "🚀 Dollop System Fetch".bold().cyan());
+    println!("{}", "🚀 Vron System Fetch".bold().cyan());
     println!("------------------------");
     println!("{:<10} {}", "OS:".green(), System::name().unwrap_or_else(|| "Unknown".into()));
     println!("{:<10} {}", "Kernel:".green(), System::kernel_version().unwrap_or_else(|| "Unknown".into()));
@@ -217,7 +217,7 @@ fn run_web(port: u16, directory: Option<String>) -> PyResult<()> {
     rt.block_on(async {
         let app = Router::new().fallback_service(ServeDir::new(&dir));
         let addr = SocketAddr::from(([127, 0, 0, 1], port));
-        println!("🚀 Dollop server serving directory: {}", dir);
+        println!("🚀 Vron server serving directory: {}", dir);
         let listener = tokio::net::TcpListener::bind(addr).await
             .map_err(|e| PyErr::new::<pyo3::exceptions::PyIOError, _>(format!("Failed to bind to port {}: {}", port, e)))?;
         axum::serve(listener, app)
@@ -244,21 +244,21 @@ fn convert_measure(value: f64, from_unit: &str, to_unit: &str) -> PyResult<f64> 
 
 #[pyfunction]
 fn help_internal() {
-    println!("🚀 Dollop: High-Performance All-in-One CLI");
+    println!("🚀 Vron: High-Performance All-in-One CLI");
     println!("----------------------------------------");
     println!("Usage:");
-    println!("  dollop sys            - System Fetch");
-    println!("  dollop view <file>    - Pro file viewer");
-    println!("  dollop find <pat> <f> - Pro text search");
-    println!("  dollop compute matmul - Matrix Multiplication");
-    println!("  dollop compute stats  - List statistics");
-    println!("  dollop secure hash    - Information Assurance");
-    println!("  dollop net scan       - Network Scan (Port scanner)");
-    println!("  dollop net ip         - Get local IP address");
+    println!("  vron sys            - System Fetch");
+    println!("  vron view <file>    - Pro file viewer");
+    println!("  vron find <pat> <f> - Pro text search");
+    println!("  vron compute matmul - Matrix Multiplication");
+    println!("  vron compute stats  - List statistics");
+    println!("  vron secure hash    - Information Assurance");
+    println!("  vron net scan       - Network Scan (Port scanner)");
+    println!("  vron net ip         - Get local IP address");
 }
 
 #[pymodule]
-fn _dollop(m: &Bound<'_, PyModule>) -> PyResult<()> {
+fn _vron(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(evaluate_math, m)?)?;
     m.add_function(wrap_pyfunction!(convert_measure, m)?)?;
     m.add_function(wrap_pyfunction!(run_web, m)?)?;

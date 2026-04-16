@@ -1,7 +1,7 @@
 import sys
 import os
 import json
-from . import _dollop
+from . import _vron
 
 try:
     import questionary
@@ -11,54 +11,54 @@ except ImportError:
 
 class Math:
     def evaluate(self, expr: str) -> float:
-        try: return _dollop.evaluate_math(expr)
+        try: return _vron.evaluate_math(expr)
         except Exception as e: print(f"❌ {e}"); return 0.0
 
 class Measure:
     UNITS = ["m", "ft", "km", "mi", "kg", "lb", "c", "f"]
     def convert(self, v: float, f: str, t: str) -> float:
-        try: return _dollop.convert_measure(v, f, t)
+        try: return _vron.convert_measure(v, f, t)
         except Exception as e: 
             print(f"❌ {e}\n💡 Supported: {', '.join(self.UNITS)}")
             return 0.0
 
 class Web:
     def run(self, p: int = 8000, d: str = "."):
-        try: _dollop.run_web(p, d)
+        try: _vron.run_web(p, d)
         except KeyboardInterrupt: print("\n👋 Stopped.")
         except Exception as e: print(f"❌ {e}")
 
 class Compute:
     def dot(self, v1: list, v2: list) -> float:
-        try: return _dollop.compute_dot(v1, v2)
+        try: return _vron.compute_dot(v1, v2)
         except Exception as e: print(f"❌ {e}"); return 0.0
-    def mean(self, v: list) -> float: return _dollop.compute_mean(v)
-    def median(self, v: list) -> float: return _dollop.compute_median(v)
+    def mean(self, v: list) -> float: return _vron.compute_mean(v)
+    def median(self, v: list) -> float: return _vron.compute_median(v)
     def std_dev(self, v: list) -> float:
-        try: return _dollop.compute_std_dev(v)
+        try: return _vron.compute_std_dev(v)
         except Exception as e: print(f"❌ {e}"); return 0.0
-    def sort(self, v: list) -> list: return _dollop.compute_sort(v)
+    def sort(self, v: list) -> list: return _vron.compute_sort(v)
     def matmul(self, a: list, b: list) -> list:
         if not isinstance(a, list) or not a or not isinstance(a[0], list):
             print("❌ Matrix must be a 2D list: [[1,2],[3,4]]")
             return []
-        try: return _dollop.compute_matrix_mul(a, b)
+        try: return _vron.compute_matrix_mul(a, b)
         except Exception as e: print(f"❌ {e}"); return []
 
 class Secure:
-    def hash(self, text: str) -> str: return _dollop.secure_hash(text)
+    def hash(self, text: str) -> str: return _vron.secure_hash(text)
     def gen_password(self, length: int) -> str: 
-        try: return _dollop.secure_gen_password(length)
+        try: return _vron.secure_gen_password(length)
         except Exception as e: print(f"❌ {e}"); return ""
 
 class Network:
     def my_ip(self):
-        try: return _dollop.net_my_ip()
+        try: return _vron.net_my_ip()
         except Exception as e: print(f"❌ {e}"); return "Unknown"
     def scan(self, host: str, start: int = 1, end: int = 1024):
         print(f"🔍 Scanning {host}...")
         try:
-            open_ports = _dollop.net_scan_ports(host, start, end)
+            open_ports = _vron.net_scan_ports(host, start, end)
             if open_ports: print(f"✅ Open ports: {open_ports}")
             else: print("🔒 No open ports found.")
         except KeyboardInterrupt:
@@ -66,7 +66,7 @@ class Network:
         except Exception as e: print(f"❌ {e}")
 
 class System:
-    def fetch(self): _dollop.sys_info()
+    def fetch(self): _vron.sys_info()
 
 class Editor:
     def open(self, filename: str):
@@ -82,10 +82,10 @@ class Editor:
 
 class Viewer:
     def view(self, path: str):
-        try: _dollop.view_file(path)
+        try: _vron.view_file(path)
         except Exception as e: print(f"❌ {e}")
     def find(self, pattern: str, path: str):
-        try: _dollop.find_in_file(pattern, path)
+        try: _vron.find_in_file(pattern, path)
         except Exception as e: print(f"❌ {e}")
 
 math = Math()
@@ -98,7 +98,7 @@ viewer = Viewer()
 net = Network()
 secure = Secure()
 
-def help(): _dollop.help_internal()
+def help(): _vron.help_internal()
 
 def interactive_menu():
     if not questionary:
@@ -107,7 +107,7 @@ def interactive_menu():
     while True:
         try:
             action = questionary.select(
-                "🚀 Dollop Menu",
+                "🚀 Vron Menu",
                 choices=["System Fetch", "File Viewer", "Math", "Compute", "Security", "Network Security", "Converter", "Web Server", "Editor", "Help", "Exit"]
             ).ask()
             if action in ["Exit", None]: break
