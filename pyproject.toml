@@ -4,6 +4,9 @@ build-backend = "maturin"
 
 [project]
 name = "vron"
+version = "0.1.1"
+description = "High-performance CLI utility suite for computing and security."
+readme = "README.md"
 requires-python = ">=3.8"
 dependencies = [
     "questionary>=2.0.0",
@@ -14,7 +17,10 @@ classifiers = [
     "Programming Language :: Python :: Implementation :: CPython",
     "Programming Language :: Python :: Implementation :: PyPy",
 ]
-dynamic = ["version"]
+
+[project.urls]
+Homepage = "https://github.com/spixez/dollop"
+Repository = "https://github.com/spixez/dollop"
 
 [project.scripts]
 vron = "vron:main"
