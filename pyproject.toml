@@ -1,0 +1,29 @@
+[build-system]
+requires = ["maturin>=1.13,<2.0"]
+build-backend = "maturin"
+
+[project]
+name = "dollop"
+requires-python = ">=3.8"
+dependencies = [
+    "questionary>=2.0.0",
+    "prompt_toolkit>=3.0.0",
+]
+classifiers = [
+    "Programming Language :: Rust",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Programming Language :: Python :: Implementation :: PyPy",
+]
+dynamic = ["version"]
+
+[project.scripts]
+dollop = "dollop:main"
+
+[project.optional-dependencies]
+tests = [
+    "pytest",
+]
+
+[tool.maturin]
+python-source = "python"
+module-name = "dollop._dollop"

@@ -1,0 +1,24 @@
+[package]
+name = "dollop"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+name = "_dollop"
+crate-type = ["cdylib"]
+
+[dependencies]
+pyo3 = { version = "0.23", features = ["extension-module"] }
+axum = "0.7"
+tokio = { version = "1", features = ["full"] }
+tower-http = { version = "0.5", features = ["fs"] }
+evalexpr = "11.3"
+tower = "0.5"
+sysinfo = "0.33"
+colored = "3.0"
+rayon = "1.10"
+local-ip-address = "0.6"
+sha2 = "0.10"
+hex = "0.4"
+rand = "0.8"
+futures = "0.3"
