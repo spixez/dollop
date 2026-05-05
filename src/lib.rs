@@ -6,7 +6,7 @@ use tokio::signal;
 use tower_http::services::ServeDir;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
-use sysinfo::{System, Disks, Networks};
+use sysinfo::{System, Disks, Networks, Process};
 use sha2::{Sha256, Digest};
 use rand::{thread_rng, Rng};
 use rand::distributions::Alphanumeric;
@@ -14,6 +14,8 @@ use std::time::Duration;
 use tokio::net::TcpStream;
 use futures::stream::{self, StreamExt};
 use std::collections::HashMap;
+use num_bigint::BigUint;
+use num_traits::{One, Zero};
 
 fn to_float(v: &Value) -> f64 {
     match v {
@@ -63,7 +65,6 @@ fn sys_info_data() -> HashMap<String, String> {
     data.insert("RAM_Total".into(), (sys.total_memory() / 1024 / 1024).to_string());
     data.insert("Uptime".into(), System::uptime().to_string());
 
-    // Disks
     let disks = Disks::new_with_refreshed_list();
     let mut disk_info = Vec::new();
     for disk in &disks {
@@ -75,7 +76,6 @@ fn sys_info_data() -> HashMap<String, String> {
     }
     data.insert("Disks".into(), disk_info.join(" | "));
 
-    // Networks
     let networks = Networks::new_with_refreshed_list();
     let mut net_info = Vec::new();
     for (interface_name, network) in &networks {
@@ -88,6 +88,23 @@ fn sys_info_data() -> HashMap<String, String> {
     data.insert("Networks".into(), net_info.join(" | "));
 
     data
+}
+
+#[pyfunction]
+fn sys_processes() -> Vec<HashMap<String, String>> {
+    let mut sys = System::new_all();
+    sys.refresh_all();
+    let mut processes = Vec::new();
+    for (pid, process) in sys.processes() {
+        let mut p_data = HashMap::new();
+        p_data.insert("PID".into(), pid.to_string());
+        p_data.insert("Name".into(), process.name().to_string_lossy().into_owned());
+        p_data.insert("CPU".into(), format!("{:.1}%", process.cpu_usage()));
+        p_data.insert("RAM".into(), format!("{} MB", process.memory() / 1024 / 1024));
+        processes.push(p_data);
+    }
+    processes.sort_by(|a, b| b.get("CPU").unwrap().cmp(a.get("CPU").unwrap()));
+    processes
 }
 
 #[pyfunction]
@@ -152,26 +169,26 @@ fn compute_matrix_mul(a: Vec<Vec<f64>>, b: Vec<Vec<f64>>) -> PyResult<Vec<Vec<f6
 }
 
 #[pyfunction]
-fn math_fibonacci(n: u32) -> PyResult<u64> {
-    if n == 0 { return Ok(0); }
-    if n == 1 { return Ok(1); }
-    let mut a: u64 = 0;
-    let mut b: u64 = 1;
+fn math_fibonacci(n: u32) -> BigUint {
+    if n == 0 { return BigUint::zero(); }
+    if n == 1 { return BigUint::one(); }
+    let mut a = BigUint::zero();
+    let mut b = BigUint::one();
     for _ in 2..=n {
-        let temp = a.checked_add(b).ok_or_else(|| PyErr::new::<pyo3::exceptions::PyOverflowError, _>("Fibonacci overflow"))?;
+        let temp = a + &b;
         a = b;
         b = temp;
     }
-    Ok(b)
+    b
 }
 
 #[pyfunction]
-fn math_factorial(n: u32) -> PyResult<u64> {
-    let mut res: u64 = 1;
+fn math_factorial(n: u32) -> BigUint {
+    let mut res = BigUint::one();
     for i in 1..=n {
-        res = res.checked_mul(i as u64).ok_or_else(|| PyErr::new::<pyo3::exceptions::PyOverflowError, _>("Factorial overflow"))?;
+        res *= BigUint::from(i);
     }
-    Ok(res)
+    res
 }
 
 #[pyfunction]
@@ -322,6 +339,7 @@ fn _vron(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(convert_measure, m)?)?;
     m.add_function(wrap_pyfunction!(run_web, m)?)?;
     m.add_function(wrap_pyfunction!(sys_info_data, m)?)?;
+    m.add_function(wrap_pyfunction!(sys_processes, m)?)?;
     m.add_function(wrap_pyfunction!(view_file, m)?)?;
     m.add_function(wrap_pyfunction!(find_in_file, m)?)?;
     m.add_function(wrap_pyfunction!(compute_dot, m)?)?;
