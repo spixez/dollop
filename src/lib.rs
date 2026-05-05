@@ -6,7 +6,7 @@ use tokio::signal;
 use tower_http::services::ServeDir;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
-use sysinfo::System;
+use sysinfo::{System, Disks, Networks};
 use sha2::{Sha256, Digest};
 use rand::{thread_rng, Rng};
 use rand::distributions::Alphanumeric;
@@ -48,14 +48,45 @@ fn sys_info_data() -> HashMap<String, String> {
     let mut sys = System::new_all();
     sys.refresh_all();
     let mut data = HashMap::new();
+    
     data.insert("OS".into(), System::name().unwrap_or_else(|| "Unknown".into()));
     data.insert("Kernel".into(), System::kernel_version().unwrap_or_else(|| "Unknown".into()));
+    data.insert("Hostname".into(), System::host_name().unwrap_or_else(|| "Unknown".into()));
+    
     if let Some(cpu) = sys.cpus().first() {
-        data.insert("CPU".into(), cpu.brand().to_string());
+        data.insert("CPU_Brand".into(), cpu.brand().to_string());
     }
+    data.insert("CPU_Count".into(), sys.cpus().len().to_string());
+    data.insert("CPU_Usage".into(), format!("{:.1}", sys.global_cpu_usage()));
+    
     data.insert("RAM_Used".into(), (sys.used_memory() / 1024 / 1024).to_string());
     data.insert("RAM_Total".into(), (sys.total_memory() / 1024 / 1024).to_string());
     data.insert("Uptime".into(), System::uptime().to_string());
+
+    // Disks
+    let disks = Disks::new_with_refreshed_list();
+    let mut disk_info = Vec::new();
+    for disk in &disks {
+        disk_info.push(format!("{}: {}/{} GB", 
+            disk.mount_point().to_string_lossy(),
+            disk.available_space() / 1024 / 1024 / 1024,
+            disk.total_space() / 1024 / 1024 / 1024
+        ));
+    }
+    data.insert("Disks".into(), disk_info.join(" | "));
+
+    // Networks
+    let networks = Networks::new_with_refreshed_list();
+    let mut net_info = Vec::new();
+    for (interface_name, network) in &networks {
+        net_info.push(format!("{}: Rx {}/Tx {} KB", 
+            interface_name,
+            network.received() / 1024,
+            network.transmitted() / 1024
+        ));
+    }
+    data.insert("Networks".into(), net_info.join(" | "));
+
     data
 }
 
