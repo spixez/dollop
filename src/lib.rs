@@ -6,7 +6,7 @@ use tokio::signal;
 use tower_http::services::ServeDir;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
-use sysinfo::{System, Disks, Networks, Process};
+use sysinfo::{System, Disks, Networks};
 use sha2::{Sha256, Digest};
 use rand::{thread_rng, Rng};
 use rand::distributions::Alphanumeric;

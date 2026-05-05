@@ -4,7 +4,7 @@ build-backend = "maturin"
 
 [project]
 name = "vron"
-version = "0.1.9"
+version = "0.2.0"
 description = "High-performance CLI utility suite for computing and security."
 readme = "README.md"
 requires-python = ">=3.8"
@@ -18,8 +18,8 @@ classifiers = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/spixez/dollop"
-Repository = "https://github.com/spixez/dollop"
+Homepage = "https://github.com/Golgrax/vron"
+Repository = "https://github.com/Golgrax/vron"
 
 [project.scripts]
 vron = "vron:main"
