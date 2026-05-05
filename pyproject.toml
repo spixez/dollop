@@ -9,8 +9,7 @@ description = "High-performance CLI utility suite for computing and security."
 readme = "README.md"
 requires-python = ">=3.8"
 dependencies = [
-    "questionary>=2.0.0",
-    "prompt_toolkit>=3.0.0",
+    "textual>=0.50.0",
 ]
 classifiers = [
     "Programming Language :: Rust",

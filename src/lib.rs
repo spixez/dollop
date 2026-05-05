@@ -7,13 +7,13 @@ use tower_http::services::ServeDir;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 use sysinfo::System;
-use colored::*;
 use sha2::{Sha256, Digest};
 use rand::{thread_rng, Rng};
 use rand::distributions::Alphanumeric;
 use std::time::Duration;
 use tokio::net::TcpStream;
 use futures::stream::{self, StreamExt};
+use std::collections::HashMap;
 
 fn to_float(v: &Value) -> f64 {
     match v {
@@ -44,18 +44,19 @@ fn evaluate_math(expression: &str) -> PyResult<f64> {
 }
 
 #[pyfunction]
-fn sys_info() {
+fn sys_info_data() -> HashMap<String, String> {
     let mut sys = System::new_all();
     sys.refresh_all();
-    println!("{}", "🚀 Vron System Fetch".bold().cyan());
-    println!("------------------------");
-    println!("{:<10} {}", "OS:".green(), System::name().unwrap_or_else(|| "Unknown".into()));
-    println!("{:<10} {}", "Kernel:".green(), System::kernel_version().unwrap_or_else(|| "Unknown".into()));
+    let mut data = HashMap::new();
+    data.insert("OS".into(), System::name().unwrap_or_else(|| "Unknown".into()));
+    data.insert("Kernel".into(), System::kernel_version().unwrap_or_else(|| "Unknown".into()));
     if let Some(cpu) = sys.cpus().first() {
-        println!("{:<10} {}", "CPU:".green(), cpu.brand());
+        data.insert("CPU".into(), cpu.brand().to_string());
     }
-    println!("{:<10} {} / {} MB", "RAM:".green(), sys.used_memory() / 1024 / 1024, sys.total_memory() / 1024 / 1024);
-    println!("{:<10} {} seconds", "Uptime:".green(), System::uptime());
+    data.insert("RAM_Used".into(), (sys.used_memory() / 1024 / 1024).to_string());
+    data.insert("RAM_Total".into(), (sys.total_memory() / 1024 / 1024).to_string());
+    data.insert("Uptime".into(), System::uptime().to_string());
+    data
 }
 
 #[pyfunction]
@@ -103,7 +104,6 @@ fn compute_matrix_mul(a: Vec<Vec<f64>>, b: Vec<Vec<f64>>) -> PyResult<Vec<Vec<f6
     if rows_b == 0 { return Ok(vec![]); }
     let cols_b = b[0].len();
     
-    // Safety check for ragged matrices
     for row in &a { if row.len() != cols_a { return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Matrix A is ragged")); } }
     for row in &b { if row.len() != cols_b { return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Matrix B is ragged")); } }
 
@@ -118,6 +118,47 @@ fn compute_matrix_mul(a: Vec<Vec<f64>>, b: Vec<Vec<f64>>) -> PyResult<Vec<Vec<f6
         }
     }
     Ok(result)
+}
+
+#[pyfunction]
+fn math_fibonacci(n: u32) -> u64 {
+    if n == 0 { return 0; }
+    if n == 1 { return 1; }
+    let mut a = 0;
+    let mut b = 1;
+    for _ in 2..=n {
+        let temp = a + b;
+        a = b;
+        b = temp;
+    }
+    b
+}
+
+#[pyfunction]
+fn math_factorial(n: u32) -> u64 {
+    (1..=n).map(|x| x as u64).product()
+}
+
+#[pyfunction]
+fn math_is_prime(n: u32) -> bool {
+    if n <= 1 { return false; }
+    for i in 2..=((n as f64).sqrt() as u32) {
+        if n % i == 0 { return false; }
+    }
+    true
+}
+
+#[pyfunction]
+fn algo_binary_search(arr: Vec<f64>, target: f64) -> isize {
+    let mut low = 0;
+    let mut high = arr.len() as isize - 1;
+    while low <= high {
+        let mid = low + (high - low) / 2;
+        if arr[mid as usize] == target { return mid; }
+        if arr[mid as usize] < target { low = mid + 1; }
+        else { high = mid - 1; }
+    }
+    -1
 }
 
 #[pyfunction]
@@ -182,30 +223,29 @@ fn net_scan_ports(py: Python<'_>, host: String, start_port: u16, end_port: u16) 
 }
 
 #[pyfunction]
-fn find_in_file(pattern: &str, path: &str) -> PyResult<()> {
+fn find_in_file(pattern: &str, path: &str) -> PyResult<Vec<String>> {
     let file = File::open(path).map_err(|e| PyErr::new::<pyo3::exceptions::PyIOError, _>(e.to_string()))?;
     let reader = BufReader::new(file);
-    let mut found = false;
+    let mut results = Vec::new();
     for (idx, line) in reader.lines().enumerate() {
         let l = line.map_err(|e| PyErr::new::<pyo3::exceptions::PyIOError, _>(e.to_string()))?;
         if l.contains(pattern) {
-            println!("{}:{} | {}", path.cyan(), (idx + 1).to_string().yellow(), l.replace(pattern, &pattern.red().to_string()));
-            found = true;
+            results.push(format!("{}:{} | {}", path, idx + 1, l));
         }
     }
-    if !found { println!("No matches found for '{}'", pattern); }
-    Ok(())
+    Ok(results)
 }
 
 #[pyfunction]
-fn view_file(path: &str) -> PyResult<()> {
+fn view_file(path: &str) -> PyResult<Vec<String>> {
     let file = File::open(path).map_err(|e| PyErr::new::<pyo3::exceptions::PyIOError, _>(format!("Failed to open: {}", e)))?;
     let reader = BufReader::new(file);
+    let mut lines = Vec::new();
     for (idx, line) in reader.lines().enumerate() {
         let l = line.map_err(|e| PyErr::new::<pyo3::exceptions::PyIOError, _>(format!("Failed to read: {}", e)))?;
-        println!("{:>4} | {}", (idx + 1).to_string().dimmed(), l);
+        lines.push(format!("{:>4} | {}", idx + 1, l));
     }
-    Ok(())
+    Ok(lines)
 }
 
 #[pyfunction]
@@ -217,7 +257,6 @@ fn run_web(port: u16, directory: Option<String>) -> PyResult<()> {
     rt.block_on(async {
         let app = Router::new().fallback_service(ServeDir::new(&dir));
         let addr = SocketAddr::from(([127, 0, 0, 1], port));
-        println!("🚀 Vron server serving directory: {}", dir);
         let listener = tokio::net::TcpListener::bind(addr).await
             .map_err(|e| PyErr::new::<pyo3::exceptions::PyIOError, _>(format!("Failed to bind to port {}: {}", port, e)))?;
         axum::serve(listener, app)
@@ -242,27 +281,12 @@ fn convert_measure(value: f64, from_unit: &str, to_unit: &str) -> PyResult<f64> 
     Ok(result)
 }
 
-#[pyfunction]
-fn help_internal() {
-    println!("🚀 Vron: High-Performance All-in-One CLI");
-    println!("----------------------------------------");
-    println!("Usage:");
-    println!("  vron sys            - System Fetch");
-    println!("  vron view <file>    - Pro file viewer");
-    println!("  vron find <pat> <f> - Pro text search");
-    println!("  vron compute matmul - Matrix Multiplication");
-    println!("  vron compute stats  - List statistics");
-    println!("  vron secure hash    - Information Assurance");
-    println!("  vron net scan       - Network Scan (Port scanner)");
-    println!("  vron net ip         - Get local IP address");
-}
-
 #[pymodule]
 fn _vron(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(evaluate_math, m)?)?;
     m.add_function(wrap_pyfunction!(convert_measure, m)?)?;
     m.add_function(wrap_pyfunction!(run_web, m)?)?;
-    m.add_function(wrap_pyfunction!(sys_info, m)?)?;
+    m.add_function(wrap_pyfunction!(sys_info_data, m)?)?;
     m.add_function(wrap_pyfunction!(view_file, m)?)?;
     m.add_function(wrap_pyfunction!(find_in_file, m)?)?;
     m.add_function(wrap_pyfunction!(compute_dot, m)?)?;
@@ -271,10 +295,13 @@ fn _vron(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(compute_std_dev, m)?)?;
     m.add_function(wrap_pyfunction!(compute_sort, m)?)?;
     m.add_function(wrap_pyfunction!(compute_matrix_mul, m)?)?;
+    m.add_function(wrap_pyfunction!(math_fibonacci, m)?)?;
+    m.add_function(wrap_pyfunction!(math_factorial, m)?)?;
+    m.add_function(wrap_pyfunction!(math_is_prime, m)?)?;
+    m.add_function(wrap_pyfunction!(algo_binary_search, m)?)?;
     m.add_function(wrap_pyfunction!(secure_hash, m)?)?;
     m.add_function(wrap_pyfunction!(secure_gen_password, m)?)?;
     m.add_function(wrap_pyfunction!(net_my_ip, m)?)?;
     m.add_function(wrap_pyfunction!(net_scan_ports, m)?)?;
-    m.add_function(wrap_pyfunction!(help_internal, m)?)?;
     Ok(())
 }
