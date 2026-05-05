@@ -135,8 +135,12 @@ fn math_fibonacci(n: u32) -> u64 {
 }
 
 #[pyfunction]
-fn math_factorial(n: u32) -> u64 {
-    (1..=n).map(|x| x as u64).product()
+fn math_factorial(n: u32) -> PyResult<u64> {
+    let mut res: u64 = 1;
+    for i in 1..=n {
+        res = res.checked_mul(i as u64).ok_or_else(|| PyErr::new::<pyo3::exceptions::PyOverflowError, _>("Factorial overflow"))?;
+    }
+    Ok(res)
 }
 
 #[pyfunction]
