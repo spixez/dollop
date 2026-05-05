@@ -152,17 +152,17 @@ fn compute_matrix_mul(a: Vec<Vec<f64>>, b: Vec<Vec<f64>>) -> PyResult<Vec<Vec<f6
 }
 
 #[pyfunction]
-fn math_fibonacci(n: u32) -> u64 {
-    if n == 0 { return 0; }
-    if n == 1 { return 1; }
-    let mut a = 0;
-    let mut b = 1;
+fn math_fibonacci(n: u32) -> PyResult<u64> {
+    if n == 0 { return Ok(0); }
+    if n == 1 { return Ok(1); }
+    let mut a: u64 = 0;
+    let mut b: u64 = 1;
     for _ in 2..=n {
-        let temp = a + b;
+        let temp = a.checked_add(b).ok_or_else(|| PyErr::new::<pyo3::exceptions::PyOverflowError, _>("Fibonacci overflow"))?;
         a = b;
         b = temp;
     }
-    b
+    Ok(b)
 }
 
 #[pyfunction]
